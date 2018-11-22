@@ -44,7 +44,7 @@ class Repositories extends Call {
      */
     @Override
     String execute() {
-        for (Json json : new JsonArray(Objects.requireNonNull(Util.httpsCall(Api.userRepos, getUser().getToken())))) {
+        for (Json json : new JsonArray(Objects.requireNonNull(Util.get(Api.userRepos, getUser().getToken())))) {
             RepoMapper mapper = Parser.convertToPayload(json, RepoMapper.class);
             String time = mapper.pushed_at.substring(0, mapper.pushed_at.indexOf("T"));
             String command = "";

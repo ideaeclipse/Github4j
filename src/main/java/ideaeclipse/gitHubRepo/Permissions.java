@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 @Target(value = ElementType.TYPE)
 public @interface Permissions {
     enum Permission {
-        REPO, USEREMAIL, WRITEPUBLICKEY;
+        REPO, USEREMAIL, ADMINPUBLICKEY;
     }
 
     Permission permission();

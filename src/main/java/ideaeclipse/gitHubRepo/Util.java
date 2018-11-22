@@ -16,11 +16,12 @@ import java.nio.charset.StandardCharsets;
 class Util {
     /**
      * Makes an http call but returns a {@link HttpsURLConnection}
-     * @param url destination
+     *
+     * @param url   destination
      * @param token authorization token
      * @return Connection
      */
-    static HttpsURLConnection httpsCallCon(final String url, final String token) {
+    static HttpsURLConnection getCon(final String url, final String token) {
         try {
             return authorize(new URL(url), token);
         } catch (IOException e) {
@@ -31,11 +32,12 @@ class Util {
 
     /**
      * get call but returns response
-     * @param url destination
+     *
+     * @param url   destination
      * @param token authorization token
      * @return reponse
      */
-    static String httpsCall(final String url, final String token) {
+    static String get(final String url, final String token) {
         try {
             HttpsURLConnection connection = authorize(new URL(url), token);
             return getReturn(connection);
@@ -46,13 +48,30 @@ class Util {
     }
 
     /**
-     * post call with json data
-     * @param url destination
+     * delete call but returns response
+     *
+     * @param url   destination
      * @param token authorization token
-     * @param json json attachment
      * @return reponse
      */
-    static String httpsCall(final String url, final String token, final Json json) {
+    static HttpsURLConnection delete(final String url, final String token) {
+        try {
+            return delete(authorize(new URL(url), token));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * post call with json data
+     *
+     * @param url   destination
+     * @param token authorization token
+     * @param json  json attachment
+     * @return reponse
+     */
+    static String json(final String url, final String token, final Json json) {
         try {
             HttpsURLConnection connection = json(authorize(new URL(url), token), json);
             return getReturn(connection);
@@ -64,7 +83,8 @@ class Util {
 
     /**
      * Adds json object to url connection
-     * @param con connection
+     *
+     * @param con    connection
      * @param object json object
      * @return url connectioj
      */
@@ -84,8 +104,24 @@ class Util {
     }
 
     /**
+     * Sets method to DELETE
+     * @param con url connection
+     * @return connection
+     */
+    private static HttpsURLConnection delete(final HttpsURLConnection con) {
+        try {
+            con.setDoOutput(true);
+            con.setRequestMethod("DELETE");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return con;
+    }
+
+    /**
      * Sets authorization header
-     * @param url destination
+     *
+     * @param url   destination
      * @param token token
      * @return url connection
      */
@@ -102,6 +138,7 @@ class Util {
 
     /**
      * Gets response from url connection
+     *
      * @param con connection
      * @return response
      * @throws IOException connection has bad response
@@ -119,6 +156,7 @@ class Util {
 
     /**
      * Creates a file
+     *
      * @param file file
      * @return if it creates
      */
@@ -135,6 +173,7 @@ class Util {
 
     /**
      * writes data to file
+     *
      * @param fileName file
      * @param fileData data
      */
@@ -153,13 +192,14 @@ class Util {
 
     /**
      * Reads data from file
+     *
      * @param fileName file
      * @return data in file
      */
-    static String readFile(final String fileName){
+    static String readFile(final String fileName) {
         File file = new File(fileName);
         StringBuilder builder = null;
-        if(file.exists()) {
+        if (file.exists()) {
             builder = new StringBuilder();
             try {
                 BufferedReader br = new BufferedReader(new FileReader(file));
@@ -169,7 +209,7 @@ class Util {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }else{
+        } else {
             try {
                 Thread.sleep(1000);
                 return readFile(fileName);
@@ -182,9 +222,10 @@ class Util {
 
     /**
      * Creates directory for a file
+     *
      * @param file file
      */
-    static void mkdir(File file){
+    static void mkdir(File file) {
         if (!file.exists())
             file.mkdir();
     }

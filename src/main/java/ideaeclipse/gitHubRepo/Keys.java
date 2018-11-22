@@ -6,19 +6,19 @@ import ideaeclipse.JsonUtilities.Parser;
 
 import java.io.*;
 import java.util.Objects;
-import java.util.Scanner;
 
 /**
- * @apiNote User must have {@link ideaeclipse.gitHubRepo.Permissions.Permission#WRITEPUBLICKEY}
- *
- * Class queries all ssh keys adds one for this application if doesn't have one
- *
  * @author Ideaeclipse
+ * @apiNote User must have {@link ideaeclipse.gitHubRepo.Permissions.Permission#ADMINPUBLICKEY}
+ * <p>
+ * Class queries all ssh keys adds one for this application if doesn't have one
  */
-@Permissions(permission = Permissions.Permission.WRITEPUBLICKEY)
+@Permissions(permission = Permissions.Permission.ADMINPUBLICKEY)
 class Keys extends Call {
     private static final boolean windows;
     private static final String spacer;
+    private String folder;
+    private String keys;
 
     static {
         windows = System.getProperty("os.name").toLowerCase().contains("windows");
@@ -28,32 +28,51 @@ class Keys extends Call {
     /**
      * @param user githubuser object
      */
-    Keys(final GithubUser user) {
+    Keys(final GithubUser user, final String folder) {
         super(user);
+        this.folder = folder;
     }
 
     /**
-     * Checks users ssh keys
-     * If github4j is not there create a new ssh key for this application
-     * TODO: check locally for ssh pair
+     * Checks users ssh keya
+     *
      * @return folder
      */
     @Override
     String execute() {
-        String folder = System.getProperty("user.dir") + spacer + "gitHubBackups";
-        for (Json json : new JsonArray(String.valueOf(Objects.requireNonNull(Util.httpsCall(Api.keys, getUser().getToken()))))) {
+        this.keys = folder + spacer + "keys" + spacer;
+        for (Json json : new JsonArray(String.valueOf(Objects.requireNonNull(Util.get(Api.keys, getUser().getToken()))))) {
             KeyParser parser = Parser.convertToPayload(json, KeyParser.class);
             if (parser.title.toLowerCase().equals("github4j")) {
-                return folder + spacer;
+                if (new File(this.keys + "github_rsa").exists())
+                    return folder + spacer;
+                else {
+                    if (deleteOldSSHKey(parser.id))
+                        break;
+                    else {
+                        System.out.println("Could not delete ssh key with id: " + parser.id +
+                                "Please check the OAuth token permissions or manually delete the key");
+                        System.exit(-1);
+                    }
+
+                }
             }
         }
+        generateSSHKeyPair();
+        return folder + spacer;
+    }
+
+    /**
+     * If github4j is not in the public keys list create a new ssh key for this application
+     */
+    private void generateSSHKeyPair() {
         System.out.println("Generating new ssh key");
         //generate pub files
         File file = new File(folder);
         Util.mkdir(file);
-        File keyDir = new File(file.getAbsolutePath() + spacer + "keys");
+        File keyDir = new File(keys);
         Util.mkdir(keyDir);
-        String executableName = keyDir.getAbsolutePath() + spacer + "exec" + (windows ? ".bat" : ".sh");
+        String executableName = keys + "exec" + (windows ? ".bat" : ".sh");
         Util.writeToFile(executableName, createExecutable());
         try {
             if (!windows)
@@ -65,23 +84,36 @@ class Keys extends Call {
         //upload to github
         Json json = new Json();
         json.put("title", "Github4J");
-        String key = Util.readFile(folder + spacer + "keys" + spacer + "github_rsa.pub");
+        String key = Util.readFile(keys + "github_rsa.pub");
         json.put("key", key);
-        Util.httpsCall(Api.keys, getUser().getToken(), json);
+        Util.json(Api.keys, getUser().getToken(), json);
         file = new File(executableName);
         if (file.exists())
             file.delete();
-        return folder + spacer;
+    }
+
+    /**
+     * Called when the key exists on the website but not locally
+     *
+     * @param id key id
+     */
+    private boolean deleteOldSSHKey(final int id) {
+        System.out.println("Deleting missing sshkey pair with id: " + id);
+        try {
+            return Objects.requireNonNull(Util.delete(Api.keys + "/" + id, getUser().getToken())).getResponseCode() == 204;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     /**
      * Asks for github email
+     *
      * @return ssh-keygen command
      */
     private String createExecutable() {
-        Scanner sc = new Scanner(System.in);
-        System.out.print("Input your github email: ");
-        return "ssh-keygen -b 4086 -t rsa -C \"" + sc.next() + "\" -f \"" + System.getProperty("user.dir") + spacer + "gitHubBackups" + spacer + "keys" + spacer + "github_rsa\" -q -N \"\"";
+        return "ssh-keygen -b 4086 -t rsa -C \"" + new Email(getUser()).getReturn() + "\" -f \"" + this.keys + "github_rsa\" -q -N \"\"";
     }
 
     /**
@@ -89,6 +121,7 @@ class Keys extends Call {
      */
     public static class KeyParser {
         public String title;
+        public Integer id;
     }
 }
 

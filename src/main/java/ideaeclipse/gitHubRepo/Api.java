@@ -11,4 +11,5 @@ class Api {
     static String keys = endpoint + "user/keys";
     static String userRepos = endpoint + "user/repos";
     static String publicUserRepos = endpoint + "users/:username/repos";
+    static String emails = endpoint + "user/emails";
 }
