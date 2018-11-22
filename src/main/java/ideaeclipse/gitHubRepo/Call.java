@@ -1,17 +1,21 @@
 package ideaeclipse.gitHubRepo;
 
-public abstract class Call {
+/**
+ * Logic for annotation permission system
+ *
+ * @author Ideaeclipse
+ */
+abstract class Call {
     private final GithubUser user;
-    private String returnValue;
 
-    public Call(final GithubUser user) {
+    Call(final GithubUser user) {
         this.user = user;
-        this.returnValue = null;
-        if (permissionCheck())
-            returnValue = execute();
-
     }
 
+    /**
+     * Checks if permissions for the user is valid
+     * @return if permissions is valid
+     */
     private boolean permissionCheck() {
         Permissions.Permission permission = this.getClass().getAnnotation(Permissions.class).permission();
         if (user.getScopes().contains(permission)) {
@@ -22,13 +26,23 @@ public abstract class Call {
         return false;
     }
 
-    public String getReturn() {
-        return returnValue;
+    /**
+     * Data from execute
+     * @return data from execute
+     */
+    String getReturn() {
+        return permissionCheck() ? execute() : null;
     }
 
+    /**
+     * @return user that was passed
+     */
     GithubUser getUser() {
         return user;
     }
 
+    /**
+     * @return abstract method for each api call
+     */
     abstract String execute();
 }

@@ -4,11 +4,17 @@ import ideaeclipse.JsonUtilities.Json;
 import ideaeclipse.JsonUtilities.JsonArray;
 import ideaeclipse.JsonUtilities.Parser;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.Objects;
+import java.util.Scanner;
 
+/**
+ * @apiNote User must have {@link ideaeclipse.gitHubRepo.Permissions.Permission#WRITEPUBLICKEY}
+ *
+ * Class queries all ssh keys adds one for this application if doesn't have one
+ *
+ * @author Ideaeclipse
+ */
 @Permissions(permission = Permissions.Permission.WRITEPUBLICKEY)
 class Keys extends Call {
     private static final boolean windows;
@@ -19,65 +25,70 @@ class Keys extends Call {
         spacer = windows ? "\\" : "/";
     }
 
+    /**
+     * @param user githubuser object
+     */
     Keys(final GithubUser user) {
         super(user);
     }
 
+    /**
+     * Checks users ssh keys
+     * If github4j is not there create a new ssh key for this application
+     * TODO: check locally for ssh pair
+     * @return folder
+     */
     @Override
     String execute() {
-        for (Json json : new JsonArray(String.valueOf(Objects.requireNonNull(Util.httpsCall(Api.getKeys, getUser().getToken()))))) {
+        String folder = System.getProperty("user.dir") + spacer + "gitHubBackups";
+        for (Json json : new JsonArray(String.valueOf(Objects.requireNonNull(Util.httpsCall(Api.keys, getUser().getToken()))))) {
             KeyParser parser = Parser.convertToPayload(json, KeyParser.class);
-            if (parser.title.toLowerCase().equals("github4j"))
-                return "true";
+            if (parser.title.toLowerCase().equals("github4j")) {
+                return folder + spacer;
+            }
         }
+        System.out.println("Generating new ssh key");
         //generate pub files
-        File file = new File(System.getProperty("user.dir") + spacer + "temp");
-        if (!file.exists())
-            file.mkdir();
-        String executableName = file.getAbsolutePath() + "/exec" + (windows ? ".bat" : ".sh");
-        writeToFile(executableName, createExecutable());
+        File file = new File(folder);
+        Util.mkdir(file);
+        File keyDir = new File(file.getAbsolutePath() + spacer + "keys");
+        Util.mkdir(keyDir);
+        String executableName = keyDir.getAbsolutePath() + spacer + "exec" + (windows ? ".bat" : ".sh");
+        Util.writeToFile(executableName, createExecutable());
         try {
             if (!windows)
-                Runtime.getRuntime().exec("chmod u+rtx" + executableName);
+                Runtime.getRuntime().exec("chmod u+rtx " + executableName);
             Runtime.getRuntime().exec(executableName);
         } catch (IOException e) {
             e.printStackTrace();
         }
         //upload to github
-
-
-        return "word";
+        Json json = new Json();
+        json.put("title", "Github4J");
+        String key = Util.readFile(folder + spacer + "keys" + spacer + "github_rsa.pub");
+        json.put("key", key);
+        Util.httpsCall(Api.keys, getUser().getToken(), json);
+        file = new File(executableName);
+        if (file.exists())
+            file.delete();
+        return folder + spacer;
     }
 
+    /**
+     * Asks for github email
+     * @return ssh-keygen command
+     */
     private String createExecutable() {
-        return "ssh-keygen -b 4086 -t rsa -f \"" + System.getProperty("user.dir") + spacer + "temp" + spacer + "github_rsa\" -q -N \"\"";
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Input your github email: ");
+        return "ssh-keygen -b 4086 -t rsa -C \"" + sc.next() + "\" -f \"" + System.getProperty("user.dir") + spacer + "gitHubBackups" + spacer + "keys" + spacer + "github_rsa\" -q -N \"\"";
     }
 
-    private boolean createFile(final File file) {
-        if (!file.exists()) {
-            try {
-                return file.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return false;
-    }
-
-    private void writeToFile(final String fileName, final String fileData) {
-        if (createFile(new File(fileName))) {
-            FileWriter writer;
-            try {
-                writer = new FileWriter(fileName, false);
-                writer.write(fileData, 0, fileData.length());
-                writer.close();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-        }
-    }
-
+    /**
+     * takes title from json string
+     */
     public static class KeyParser {
         public String title;
     }
 }
+
