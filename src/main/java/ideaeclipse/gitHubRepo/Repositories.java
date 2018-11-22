@@ -14,6 +14,7 @@ import java.util.Objects;
  * Class queries all repo data and creates a shell script to clone all repos
  *
  * TODO: create repo object make download optional
+ * TODO: Don't download repo if it is already up to date
  *
  * @author Ideaeclipse
  */
