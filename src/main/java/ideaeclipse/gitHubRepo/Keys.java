@@ -11,6 +11,13 @@ import java.util.Objects;
 
 @Permissions(permission = Permissions.Permission.WRITEPUBLICKEY)
 class Keys extends Call {
+    private static final boolean windows;
+    private static final String spacer;
+
+    static {
+        windows = System.getProperty("os.name").toLowerCase().contains("windows");
+        spacer = windows ? "\\" : "/";
+    }
 
     Keys(final GithubUser user) {
         super(user);
@@ -23,18 +30,27 @@ class Keys extends Call {
             if (parser.title.toLowerCase().equals("github4j"))
                 return "true";
         }
-        if (!System.getProperty("os.name").toLowerCase().contains("windows")) {
-            File file = new File(System.getProperty("user.dir") + "/temp");
-            if (!file.exists())
-                file.mkdir();
-            writeToFile(file.getAbsolutePath() + "/exec.sh", createExecutable());
+        //generate pub files
+        File file = new File(System.getProperty("user.dir") + spacer + "temp");
+        if (!file.exists())
+            file.mkdir();
+        String executableName = file.getAbsolutePath() + "/exec" + (windows ? ".bat" : ".sh");
+        writeToFile(executableName, createExecutable());
+        try {
+            if (!windows)
+                Runtime.getRuntime().exec("chmod u+rtx" + executableName);
+            Runtime.getRuntime().exec(executableName);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+        //upload to github
+
+
         return "word";
     }
 
     private String createExecutable() {
-        StringBuilder builder = new StringBuilder();
-        return builder.toString();
+        return "ssh-keygen -b 4086 -t rsa -f \"" + System.getProperty("user.dir") + spacer + "temp" + spacer + "github_rsa\" -q -N \"\"";
     }
 
     private boolean createFile(final File file) {
@@ -62,8 +78,6 @@ class Keys extends Call {
     }
 
     public static class KeyParser {
-        public Boolean verified;
         public String title;
-        public String key;
     }
 }
