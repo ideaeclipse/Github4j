@@ -14,6 +14,7 @@ abstract class Call {
 
     /**
      * Checks if permissions for the user is valid
+     *
      * @return if permissions is valid
      */
     private boolean permissionCheck() {
@@ -28,6 +29,8 @@ abstract class Call {
 
     /**
      * Data from execute
+     * TODO: Don't return null with invalid permission return an error response code instead of printing out a message in the permissionCheck method
+     *
      * @return data from execute
      */
     String getReturn() {

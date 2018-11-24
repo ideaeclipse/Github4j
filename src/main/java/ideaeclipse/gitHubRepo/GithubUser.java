@@ -20,11 +20,15 @@ public class GithubUser {
     private final List<Permission> scopes;
 
     /**
-     * @param token    github oauth token
+     * @param token github oauth token
      */
     public GithubUser(final String token) {
         this.token = token;
         this.scopes = findScopes();
+    }
+
+    public List<IRepository> getRepositories() {
+        return new Repositories(this).getRepositories();
     }
 
     /**
@@ -32,11 +36,6 @@ public class GithubUser {
      */
     public void backUpAllRepos() {
         String folder = new Keys(this, System.getProperty("user.dir") + "/gitHubBackups").getReturn();
-        if (folder.length() > 0) {
-            new Repositories(this, folder).getReturn();
-        } else {
-            System.out.println("Key couldn't synced");
-        }
     }
 
     /**
