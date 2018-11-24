@@ -5,11 +5,20 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+/**
+ * This class is the super class for the repository class
+ * This class is called when you want to backup a specific repo
+ *
+ * @author Ideaeclipse
+ */
 public abstract class IRepository {
     private static final boolean windows;
     private static final String spacer;
     private final GithubUser user;
 
+    /*
+     * Allows for windows changes
+     */
     static {
         windows = System.getProperty("os.name").toLowerCase().contains("windows");
         spacer = windows ? "\\" : "/";
@@ -19,6 +28,11 @@ public abstract class IRepository {
         this.user = user;
     }
 
+    /**
+     * Backups the repository to the backups directory
+     * TODO: don't always return true
+     * @return if it backups correctly
+     */
     public boolean backup() {
         String folder = new Keys(user, System.getProperty("user.dir") + "/gitHubBackups").getReturn();
         String time = getTimeStamp().substring(0, getTimeStamp().indexOf("T"));
@@ -41,13 +55,17 @@ public abstract class IRepository {
                 (windows ? ")" : "fi");
         String fileName = folder + "exec2" + (windows ? ".bat" : ".sh");
         Util.writeToFile(fileName, command);
-        executeCommand(fileName, getName());
+        executeCommand(fileName);
         return true;
     }
 
-    private static void executeCommand(final String fileName, final String name) {
+    /**
+     * Executes the script that is created in {@link #backup()}
+     * @param fileName absolute path to script
+     */
+    private void executeCommand(final String fileName) {
         File file = new File(fileName);
-        System.out.println("Downloading " + name);
+        System.out.println("Downloading " + getName());
         if (file.exists()) {
             try {
                 if (!windows) {
@@ -71,7 +89,7 @@ public abstract class IRepository {
         } else {
             try {
                 Thread.sleep(1000);
-                executeCommand(fileName, name);
+                executeCommand(fileName);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

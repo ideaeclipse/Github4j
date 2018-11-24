@@ -10,8 +10,6 @@ import static ideaeclipse.gitHubRepo.Permissions.Permission;
 
 /**
  * Main object to pass your username and token. This while query your data
- * TODO: custom directory for backups
- * TODO: Windows repo code
  *
  * @author Ideaeclipse
  */
@@ -35,7 +33,9 @@ public class GithubUser {
      * Temporary call method to start backup
      */
     public void backUpAllRepos() {
-        String folder = new Keys(this, System.getProperty("user.dir") + "/gitHubBackups").getReturn();
+        for(IRepository repository: getRepositories()){
+            repository.backup();
+        }
     }
 
     /**
