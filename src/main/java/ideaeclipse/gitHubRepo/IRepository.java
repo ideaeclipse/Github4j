@@ -20,13 +20,14 @@ public abstract class IRepository {
     }
 
     public boolean backup() {
-        String folder = new Keys(user, System.getProperty("user.dir") + "\\gitHubBackups").getReturn();
+        String folder = new Keys(user, System.getProperty("user.dir") + "/gitHubBackups").getReturn();
         String time = getTimeStamp().substring(0, getTimeStamp().indexOf("T"));
-        String command = "mkdir " + folder + "backups\n" +
+        String command = (!windows?"#!/bin/bash\n":"") +
+                "mkdir " + folder + "backups\n" +
                 "cd " + folder + "backups\n" +
                 "mkdir " + getName() + "\n" +
                 "cd " + getName() + "\n" +
-                (windows ? "IF NOT EXIST " + time + spacer + " (\n" : "[ ! -d " + time + spacer + "]\nthen\n") +
+                (windows ? "IF NOT EXIST " + time + spacer + " (\n" : "if [ ! -d " + time + spacer + " ]\nthen\n") +
                 "mkdir " + time + "\n" +
                 (windows ? ("set GIT_SSH_COMMAND=ssh -i " + folder + "keys" + spacer + "github_rsa & git clone --quiet " + getSSH_URL()).replace("\\", "\\\\") : "GIT_SSH_COMMAND='ssh -i " + folder + "keys" + spacer + "github_rsa' git clone --quiet " + getSSH_URL()) + "\n" +
                 (windows ? "set \"PATH=%PATH%;C:\\Program Files\\7-Zip\\\"\n" : "") +
@@ -34,9 +35,9 @@ public abstract class IRepository {
                 (windows ? "move " + getName() + ".7z " + getName() + ".zip " + "\n" : "") +
                 (windows ? "move " : "mv ") + getName() + ".zip " + time + spacer + "\n" +
                 (windows ? "rmdir /s /q " : "rm -rf ") + getName() + "\n" +
-                "echo " + getName() + " finished downloading" +
+                "echo " + getName() + " finished downloading\n" +
                 (windows ? ") ELSE (\n" : "else\n") +
-                "echo " + getName() + " is already up to date" +
+                "echo " + getName() + " is already up to date\n" +
                 (windows ? ")" : "fi");
         String fileName = folder + "exec2" + (windows ? ".bat" : ".sh");
         Util.writeToFile(fileName, command);
