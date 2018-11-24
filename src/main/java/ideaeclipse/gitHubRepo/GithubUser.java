@@ -25,16 +25,20 @@ public class GithubUser {
         this.scopes = findScopes();
     }
 
-    public List<IRepository> getRepositories() {
+    public List<IRepository> getAllRepositories() {
         return new Repositories(this).getRepositories();
     }
 
+    public List<IRepository> getPublicRepositories(){
+        return new Repositories(this).getRepositories().stream().filter(o->o.isPrivate().equals(false)).collect(Collectors.toList());
+    }
+
     /**
-     * Temporary call method to start backup
+     * Backs up all repositories
      */
-    public void backUpAllRepos() {
-        for(IRepository repository: getRepositories()){
-            repository.backup();
+    public void backUpAllRepos(final String folder) {
+        for(IRepository repository: getAllRepositories()){
+            repository.backup(folder);
         }
     }
 

@@ -33,8 +33,8 @@ public abstract class IRepository {
      * TODO: don't always return true
      * @return if it backups correctly
      */
-    public boolean backup() {
-        String folder = new Keys(user, System.getProperty("user.dir") + "/gitHubBackups").getReturn();
+    public boolean backup(String folder) {
+        folder = new Keys(user, folder).getReturn();
         String time = getTimeStamp().substring(0, getTimeStamp().indexOf("T"));
         String command = (!windows?"#!/bin/bash\n":"") +
                 "mkdir " + folder + "backups\n" +
@@ -60,7 +60,7 @@ public abstract class IRepository {
     }
 
     /**
-     * Executes the script that is created in {@link #backup()}
+     * Executes the script that is created in {@link #backup(String)} )}
      * @param fileName absolute path to script
      */
     private void executeCommand(final String fileName) {
@@ -96,15 +96,33 @@ public abstract class IRepository {
         }
     }
 
+    /**
+     * @return timestamp of last repo commit
+     */
     public abstract String getTimeStamp();
 
+    /**
+     * @return language used in the repo
+     */
     public abstract String getLanguage();
 
+    /**
+     * @return ssh_url for git commands
+     */
     public abstract String getSSH_URL();
 
+    /**
+     * @return html_url of repo
+     */
     public abstract String getHTML_URL();
 
+    /**
+     * @return name of repo
+     */
     public abstract String getName();
 
+    /**
+     * @return if it is private
+     */
     public abstract Boolean isPrivate();
 }
