@@ -25,11 +25,11 @@ public class GithubUser {
         this.scopes = findScopes();
     }
 
-    public List<IRepository> getAllRepositories() {
+    public List<Repository> getAllRepositories() {
         return new Repositories(this).getRepositories();
     }
 
-    public List<IRepository> getPublicRepositories(){
+    public List<Repository> getPublicRepositories(){
         return new Repositories(this).getRepositories().stream().filter(o->o.isPrivate().equals(false)).collect(Collectors.toList());
     }
 

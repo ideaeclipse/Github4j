@@ -2,7 +2,6 @@ package ideaeclipse.gitHubRepo;
 
 import ideaeclipse.JsonUtilities.Json;
 import ideaeclipse.JsonUtilities.JsonArray;
-import ideaeclipse.JsonUtilities.Parser;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -16,7 +15,7 @@ import java.util.Objects;
  */
 @Permissions(permission = Permissions.Permission.REPO)
 class Repositories extends Call {
-    private final List<IRepository> repositories;
+    private final List<Repository> repositories;
 
     /**
      * @param user pass the user object
@@ -34,9 +33,7 @@ class Repositories extends Call {
     @Override
     String execute() {
         for (Json json : new JsonArray(Objects.requireNonNull(Util.get(Api.userRepos, getUser().getToken())))) {
-            RepoMapper mapper = Parser.convertToPayload(json, RepoMapper.class);
-            mapper.isPrivate = (Boolean) json.get("private");
-            repositories.add(new Repository(mapper.pushed_at, mapper.language, mapper.ssh_url, mapper.html_url, mapper.name, mapper.isPrivate, getUser()));
+            repositories.add(Util.getRepository(json, getUser()));
         }
         return repositories.isEmpty() ? "No repos" : "true";
     }
@@ -44,7 +41,7 @@ class Repositories extends Call {
     /**
      * @return list of repository objects
      */
-    public List<IRepository> getRepositories() {
+    public List<Repository> getRepositories() {
         getReturn();
         return repositories;
     }

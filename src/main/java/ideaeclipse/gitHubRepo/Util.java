@@ -1,6 +1,7 @@
 package ideaeclipse.gitHubRepo;
 
 import ideaeclipse.JsonUtilities.Json;
+import ideaeclipse.JsonUtilities.Parser;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
@@ -105,6 +106,7 @@ class Util {
 
     /**
      * Sets method to DELETE
+     *
      * @param con url connection
      * @return connection
      */
@@ -228,5 +230,17 @@ class Util {
     static void mkdir(File file) {
         if (!file.exists())
             file.mkdir();
+    }
+
+    /**
+     * Creates a new repository object based on a json string and a github user
+     * @param json json data
+     * @param user githubuser user
+     * @return new repository
+     */
+    static Repository getRepository(final Json json, final GithubUser user) {
+        Repositories.RepoMapper mapper = Parser.convertToPayload(json, Repositories.RepoMapper.class);
+        mapper.isPrivate = (Boolean) json.get("private");
+        return new Repository(mapper.pushed_at, mapper.language, mapper.ssh_url, mapper.html_url, mapper.name, mapper.isPrivate, user);
     }
 }

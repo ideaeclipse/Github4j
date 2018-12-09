@@ -45,7 +45,6 @@ class Keys extends Call {
             KeyParser parser = Parser.convertToPayload(json, KeyParser.class);
             if (parser.title.toLowerCase().equals("github4j")) {
                 if (new File(this.keys + "github_rsa").exists()) {
-                    System.out.println("SSH Key found");
                     return folder + spacer;
                 }else {
                     if (deleteOldSSHKey(parser.id))
